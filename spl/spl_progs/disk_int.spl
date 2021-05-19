@@ -1,0 +1,34 @@
+//SP saved to UTPR
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+//setting sp to point to kernel stack
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
+
+backup;
+
+//------------------------------------assgn_section-------------------------------------------//
+
+[126*512 + 2] = [126*512 + 2] + 1;			//disk access count refresh 
+
+//--------------------------------------------------------------------------------------------//
+
+//set status to free
+[DISK_STATUS_TABLE + 0]=0;
+
+//set to ready if in wait_disk
+alias l R10;
+l=0;
+while(l < MAX_PROC_NUM)do 
+	if([PROCESS_TABLE + l*16 + 4] == WAIT_DISK)then
+		[PROCESS_TABLE + l*16 +4]=READY;
+	endif;
+	l=l+1;
+endwhile;
+
+restore;
+
+//setting SP back to user SP
+SP = [PROCESS_TABLE +[SYSTEM_STATUS_TABLE+1]*16+13];
+
+ireturn;
+
+

@@ -1,0 +1,230 @@
+//load exception_file_int_0
+loadi(2,15);
+loadi(3,16);
+
+//load timer_int_1
+loadi(4,17);
+loadi(5,18);
+
+//load disk_int_2
+loadi(6,19);
+loadi(7,20);
+
+//load console_int_3
+loadi(8,21);
+loadi(9,22);
+
+//load int_6
+loadi(14,27);
+loadi(15,28);
+
+//load int_7
+loadi(16,29);
+loadi(17,30);
+
+//load int_8
+loadi(18,31);
+loadi(19,32);
+
+//load int_9
+loadi(20,33);
+loadi(21,34);
+
+//load int_10
+loadi(22,35);
+loadi(23,36);
+
+//load int_11
+loadi(24,37);
+loadi(25,38);
+
+//load int_13
+loadi(28,41);
+loadi(29,42);
+
+//load int_14
+loadi(30,43);
+loadi(31,44);
+
+//load int_15
+loadi(32,45);
+loadi(33,46);
+
+//load module_0_resource_manager
+loadi(40,53);
+loadi(41,54);
+
+//load module_1_process_manager
+loadi(42,55);
+loadi(43,56);
+
+//load module_2_memory_manager 
+loadi(44,57);
+loadi(45,58);
+
+//load module_4_device_manager
+loadi(48,61);
+loadi(49,62);
+
+//load module_5_context_switch
+loadi(50,63);
+loadi(51,64);
+
+//load inode_table
+loadi(59,3);
+loadi(60,4);
+
+//load disk free list
+loadi(61,2);
+
+//load lib_file
+loadi(63,13);
+loadi(64,14);
+
+//load init_prog
+loadi(65,7);
+loadi(66,8);
+
+//load even_code
+//loadi(83,69);
+
+//load prime_code
+//loadi(89,70);
+
+//---------------------------------------------------------------------------------------------------
+
+//disk status setup (free)
+[DISK_STATUS_TABLE + 0]=0;
+
+//--------------------------------------------------------------------------------------------------
+
+//terminal status setup (free)
+[TERMINAL_STATUS_TABLE + 0]=0;
+
+//---------------------------------------------------------------------------------------------------
+
+//init memory free_list
+alias i R15;
+i=0;
+while(i<83)do 
+	[MEMORY_FREE_LIST + i]=1;
+	i=i+1;
+endwhile;
+//breakpoint;
+while(i<128)do 
+	[MEMORY_FREE_LIST + i]=0;
+	i=i+1;
+endwhile;
+//breakpoint;
+
+//--------------------------------------------------------------------------------------------------
+
+//init wait_mem_count to 0
+[SYSTEM_STATUS_TABLE + 3]=0;
+//init mem_free_count to (128-83)
+[SYSTEM_STATUS_TABLE + 2]=45;
+
+//---------------------------------------------------------------------------------------------------
+
+//init 
+//page_table setup 
+
+PTBR=PAGE_TABLE_BASE+20;
+PTLR=10;
+
+//lib
+[PTBR+0]=63;
+[PTBR+1]="0100";
+[PTBR+2]=64;
+[PTBR+3]="0100";
+
+//heap
+[PTBR+4]=78;
+[PTBR+5]="0110";
+[PTBR+6]=79;
+[PTBR+7]="0110";
+
+//code
+[PTBR+8]=65;
+[PTBR+9]="0100";
+[PTBR+10]=66;
+[PTBR+11]="0100";
+[PTBR+12]=-1;
+[PTBR+13]="0000";
+[PTBR+14]=-1;
+[PTBR+15]="0000";
+
+//stack
+[PTBR+16]=76;
+[PTBR+17]="0110";
+[PTBR+18]=77;
+[PTBR+19]="0110";
+
+
+//process_table
+[PROCESS_TABLE+17]=1;
+[PROCESS_TABLE+20]=CREATED;
+[PROCESS_TABLE+27]=80;
+[PROCESS_TABLE+28]=0;
+[PROCESS_TABLE+29]=8*512;
+[PROCESS_TABLE+30]=PTBR;
+[PROCESS_TABLE+31]=10;
+
+//entry point value transfer
+[76*512]=[65*512+1];
+
+	//-----------------------------init disk map list for init----------------------------//
+i=0;
+while(i<10)do 
+	//[DISK_MAP_TABLE + 10*1 + i]=[PTBR + i*2];
+	[DISK_MAP_TABLE + 10*1 + i]=-1;
+	i=i+1;
+endwhile; 
+
+
+[DISK_MAP_TABLE + 10 + 4]=7;
+[DISK_MAP_TABLE + 10 + 5]=8;
+
+
+	//-----------------------init per process resource table for init---------------------//
+
+alias userAreaPage R14;
+userAreaPage=[PROCESS_TABLE + 16 + 11];
+i=0;
+while(i<8)do
+	[userAreaPage*512 + 512 - 16 + i*2]=-1;
+	[userAreaPage*512 + 512 - 16 + i*2 + 1]=-1;
+	i=i+1;
+endwhile;
+	
+	//----------------------------init semaphore table------------------------------------//
+
+i=0;
+while(i<32)do
+
+	[SEMAPHORE_TABLE + i*4 + 0] = -1;
+	[SEMAPHORE_TABLE + i*4 + 1] = 0;
+        i=i+1;
+endwhile; 
+
+
+//-------------------------------------------------------------------------------------------------
+
+//setting STATE field to TERMINATED for all other user programs
+[PROCESS_TABLE+(16*2)+4]=TERMINATED;
+[PROCESS_TABLE+(16*3)+4]=TERMINATED;
+[PROCESS_TABLE+(16*4)+4]=TERMINATED;
+[PROCESS_TABLE+(16*5)+4]=TERMINATED;
+[PROCESS_TABLE+(16*6)+4]=TERMINATED;
+[PROCESS_TABLE+(16*7)+4]=TERMINATED;
+[PROCESS_TABLE+(16*8)+4]=TERMINATED;
+[PROCESS_TABLE+(16*9)+4]=TERMINATED;
+[PROCESS_TABLE+(16*10)+4]=TERMINATED;
+[PROCESS_TABLE+(16*11)+4]=TERMINATED;
+[PROCESS_TABLE+(16*12)+4]=TERMINATED;
+[PROCESS_TABLE+(16*13)+4]=TERMINATED;
+[PROCESS_TABLE+(16*14)+4]=TERMINATED;
+[PROCESS_TABLE+(16*15)+4]=TERMINATED;
+
+
+return; 

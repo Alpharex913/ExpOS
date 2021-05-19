@@ -1,0 +1,84 @@
+alias functionNum R1;
+alias currentPID R2;
+//print("reacher mod4");
+//alias wordToPrint R3;
+
+if(functionNum == TERMINAL_WRITE)then
+
+    	multipush(R1, R2, R3);
+	//(8)
+    	functionNum = ACQUIRE_TERMINAL;
+   	 call RESOURCE_MANAGER;
+    	multipop(R1, R2, R3);
+
+	
+    	print R3;
+	
+
+	//(9)
+    	functionNum = RELEASE_TERMINAL;
+    	call RESOURCE_MANAGER;
+
+    	return;
+endif;
+
+
+if(functionNum == TERMINAL_READ)then 
+	multipush(R1, R2, R3);
+
+	functionNum = ACQUIRE_TERMINAL;	
+	R2 = [SYSTEM_STATUS_TABLE+1];
+
+	call RESOURCE_MANAGER;
+
+	multipop(R1, R2, R3);
+    	
+	
+	read;
+	
+	[PROCESS_TABLE+currentPID*16+4] = WAIT_TERMINAL;
+	
+	
+	multipush(R1,R2,R3);
+
+	call CONTEXT_SWITCH;	
+	
+	multipop(R1,R2,R3);
+	//----------------The logical address of the word where the data has to be stored is in R3, change it to physical address and store the value from input buffer here
+	[([PTBR + 2 * ((R3) / 512)] * 512) + ((R3) % 512)]=[PROCESS_TABLE+currentPID*16+8] ;
+	//[(R3)]=[PROCESS_TABLE+currentPID*16+8] ;
+	
+    return;
+endif;
+
+
+if(functionNum == DISK_LOAD)then
+	
+	multipush(R1,R2,R3,R4);	
+	R1=ACQUIRE_DISK;
+	R2=[SYSTEM_STATUS_TABLE + 1];
+	//R3 -page number 
+	//R4 -block number
+	
+	call RESOURCE_MANAGER;//mod 0
+	
+	multipop(R1,R2,R3,R4);
+	
+	//setting up disk_status_table 
+	[DISK_STATUS_TABLE + 1]=0;//load(0)/store(1)
+	[DISK_STATUS_TABLE + 2]=R3;
+	[DISK_STATUS_TABLE + 3]=R4;
+	
+	
+	load(R3,R4);
+	
+	[PROCESS_TABLE + currentPID*16 + 4]=WAIT_DISK;
+	
+	multipush(R1,R2,R3,R4);
+
+	call CONTEXT_SWITCH;
+
+	multipop(R1,R2,R3,R4);
+	
+	return;
+endif;
